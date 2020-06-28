@@ -8,9 +8,11 @@ const saveResult = (res) => {
 };
 
 const store_result = (res) => {
-  return (dispatch) => {
+  return (dispatch, getState) => {
     setTimeout(() => {
       dispatch(saveResult(res));
+      // const oldCounter = getState().ctr.counter;
+      // console.log(oldCounter);
     }, 2000);
   };
 };
