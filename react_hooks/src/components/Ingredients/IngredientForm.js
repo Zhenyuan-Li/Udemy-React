@@ -3,8 +3,8 @@ import React from 'react';
 import Card from '../UI/Card';
 import './IngredientForm.css';
 
-const IngredientForm = React.memo(props => {
-  const submitHandler = event => {
+const IngredientForm = React.memo(() => {
+  const submitHandler = (event) => {
     event.preventDefault();
     // ...
   };
@@ -29,5 +29,7 @@ const IngredientForm = React.memo(props => {
     </section>
   );
 });
+
+IngredientForm.displayName = 'IngredientForm';
 
 export default IngredientForm;
