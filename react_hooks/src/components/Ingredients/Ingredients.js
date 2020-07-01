@@ -1,17 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import Search from './Search';
+import axios from '../../axios';
 
 const Ingredients = () => {
   const [userIngredients, setUserIngredients] = useState([]);
 
+  useEffect(() => {
+    console.log('RENDERING INGREDIENTS', userIngredients);
+  }, [userIngredients]);
+
+  const filteredIngredientsHandler = useCallback((filteredIngredients) => {
+    setUserIngredients(filteredIngredients);
+  }, []);
+
   const addIngredientHandler = (ingredient) => {
-    setUserIngredients((prevIngredients) => [
-      ...prevIngredients,
-      { id: Math.random().toString(), ...ingredient },
-    ]);
+    axios
+      // eslint-disable-next-line no-undef
+      .post(`${process.env.REACT_APP_BASE_URL}/ingredients.json`, ingredient)
+      .then((res) => {
+        setUserIngredients((prevIngredients) => [
+          ...prevIngredients,
+          { id: res.data.name, ...ingredient },
+        ]);
+      });
   };
 
   const removeIngredientHandler = (ingredientId) => {
@@ -25,7 +39,7 @@ const Ingredients = () => {
       <IngredientForm onAddIngredient={addIngredientHandler} />
 
       <section>
-        <Search />
+        <Search onLoadIngredients={filteredIngredientsHandler} />
         <IngredientList
           ingredients={userIngredients}
           onRemoveItem={removeIngredientHandler}
