@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useReducer, useEffect, useCallback } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -6,59 +6,94 @@ import Search from './Search';
 import ErrorModal from '../UI/ErrorModal';
 import axios from '../../axios';
 
+const ingredientReducer = (currentIngredients, action) => {
+  switch (action.type) {
+    case 'SET':
+      return action.ingredients;
+    case 'ADD':
+      return [...currentIngredients, action.ingredient];
+    case 'DELETE':
+      return currentIngredients.filter((ing) => ing.id !== action.id);
+    default:
+      throw new Error('Should not get here!');
+  }
+};
+
+const httpReducer = (currentState, action) => {
+  switch (action.type) {
+    case 'SEND':
+      return { loading: true, error: null };
+    case 'RESPONSE':
+      return { ...currentState, loading: false };
+    case 'ERROR':
+      return { loading: false, error: action.errorMessage };
+    case 'CLEAR':
+      return { ...currentState, error: null };
+    default:
+      throw new Error('Should not get here!');
+  }
+};
+
 const Ingredients = () => {
-  const [userIngredients, setUserIngredients] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState();
+  const [userIngredients, dispatchIngredients] = useReducer(
+    ingredientReducer,
+    []
+  );
+  const [httpState, dispatchHttp] = useReducer(httpReducer, {
+    loading: false,
+    error: null,
+  });
 
   useEffect(() => {
     console.log('RENDERING INGREDIENTS', userIngredients);
   }, [userIngredients]);
 
   const filteredIngredientsHandler = useCallback((filteredIngredients) => {
-    setUserIngredients(filteredIngredients);
+    dispatchIngredients({ type: 'SET', ingredients: filteredIngredients });
   }, []);
 
   const addIngredientHandler = (ingredient) => {
-    setIsLoading(true);
+    dispatchHttp({ type: 'SEND' });
     axios
       // eslint-disable-next-line no-undef
       .post(`${process.env.REACT_APP_BASE_URL}/ingredients.json`, ingredient)
       .then((res) => {
-        setIsLoading(false);
-        setUserIngredients((prevIngredients) => [
-          ...prevIngredients,
-          { id: res.data.name, ...ingredient },
-        ]);
+        dispatchHttp({ type: 'RESPONSE' });
+        dispatchIngredients({
+          type: 'ADD',
+          ingredient: { id: res.data.name, ...ingredient },
+        });
       });
   };
 
   const removeIngredientHandler = (ingredientId) => {
-    setIsLoading(true);
+    dispatchHttp({ type: 'SEND' });
     axios
       .delete(
         // eslint-disable-next-line no-undef
         `${process.env.REACT_APP_BASE_URL}/ingredients/${ingredientId}.json`
       )
       .then(() => {
-        setIsLoading(false);
-        setUserIngredients((prevIngredients) =>
-          prevIngredients.filter((ingredient) => ingredient.id !== ingredientId)
-        );
+        dispatchHttp({ type: 'RESPONSE' });
+        dispatchIngredients({ type: 'DELETE', id: ingredientId });
       })
-      .catch((error) => {
-        setError(error.message);
-        setIsLoading(false);
+      .catch(() => {
+        dispatchHttp({
+          type: 'ERROR',
+          errorMessage: 'Something went wrong...',
+        });
       });
   };
 
   const clearError = () => {
-    setError(null);
+    dispatchHttp({ type: 'CLEAR' });
   };
 
   return (
     <div className="App">
-      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
+      {httpState.error && (
+        <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>
+      )}
 
       <IngredientForm onAddIngredient={addIngredientHandler} />
 
@@ -67,7 +102,7 @@ const Ingredients = () => {
         <IngredientList
           ingredients={userIngredients}
           onRemoveItem={removeIngredientHandler}
-          loading={isLoading}
+          loading={httpState.loading}
         />
       </section>
     </div>
