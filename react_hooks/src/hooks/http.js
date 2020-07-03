@@ -6,7 +6,7 @@ const initialState = {
   error: null,
   data: null,
   extra: null,
-  identifier: null,
+  method: null,
 };
 
 const httpReducer = (currentState, action) => {
@@ -17,7 +17,7 @@ const httpReducer = (currentState, action) => {
         error: null,
         data: null,
         extra: null,
-        identifier: action.identifier,
+        method: action.reqMethod,
       };
     case 'RESPONSE':
       return {
@@ -40,27 +40,24 @@ const useHttp = () => {
 
   const clear = useCallback(() => dispatchHttp({ type: 'CLEAR' }), []);
 
-  const sendRequest = useCallback(
-    (url, method, body, reqExtra, reqIdentifier) => {
-      dispatchHttp({ type: 'SEND', identifier: reqIdentifier });
+  const sendRequest = useCallback((url, reqMethod, body, reqExtra) => {
+    dispatchHttp({ type: 'SEND', reqMethod });
 
-      axios({ method, url, data: body })
-        .then((response) => {
-          dispatchHttp({
-            type: 'RESPONSE',
-            responseData: response.data,
-            extra: reqExtra,
-          });
-        })
-        .catch(() => {
-          dispatchHttp({
-            type: 'ERROR',
-            errorMessage: 'Something went wrong...',
-          });
+    axios({ reqMethod, url, data: body })
+      .then((response) => {
+        dispatchHttp({
+          type: 'RESPONSE',
+          responseData: response.data,
+          extra: reqExtra,
         });
-    },
-    []
-  );
+      })
+      .catch(() => {
+        dispatchHttp({
+          type: 'ERROR',
+          errorMessage: 'Something went wrong...',
+        });
+      });
+  }, []);
 
   return {
     isLoading: httpState.loading,
@@ -68,7 +65,7 @@ const useHttp = () => {
     error: httpState.error,
     sendRequest,
     reqExtra: httpState.extra,
-    reqIdentifier: httpState.identifier,
+    reqMethod: httpState.method,
     clear,
   };
 };

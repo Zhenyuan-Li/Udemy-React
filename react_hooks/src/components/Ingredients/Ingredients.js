@@ -31,20 +31,20 @@ const Ingredients = () => {
     data,
     sendRequest,
     reqExtra,
-    reqIdentifier,
+    reqMethod,
     clear,
   } = useHttp();
 
   useEffect(() => {
-    if (!isLoading && !error && reqIdentifier === 'REMOVE_INGREDIENT') {
+    if (!isLoading && !error && reqMethod === 'delete') {
       dispatchIngredients({ type: 'DELETE', id: reqExtra });
-    } else if (!isLoading && !error && reqIdentifier === 'ADD_INGREDIENT') {
+    } else if (!isLoading && !error && reqMethod === 'post') {
       dispatchIngredients({
         type: 'ADD',
         ingredient: { id: data.name, ...reqExtra },
       });
     }
-  }, [data, reqExtra, reqIdentifier, error, isLoading]);
+  }, [data, reqExtra, reqMethod, error, isLoading]);
 
   const filteredIngredientsHandler = useCallback((filteredIngredients) => {
     dispatchIngredients({ type: 'SET', ingredients: filteredIngredients });
@@ -56,8 +56,7 @@ const Ingredients = () => {
         `${process.env.REACT_APP_BASE_URL}/ingredients.json`,
         'post',
         ingredient,
-        ingredient,
-        'ADD_INGREDIENT'
+        ingredient
       );
     },
     [sendRequest]
@@ -69,8 +68,7 @@ const Ingredients = () => {
         `${process.env.REACT_APP_BASE_URL}/ingredients/${ingredientId}.json`,
         'delete',
         null,
-        ingredientId,
-        'REMOVE_INGREDIENT'
+        ingredientId
       );
     },
     [sendRequest]
