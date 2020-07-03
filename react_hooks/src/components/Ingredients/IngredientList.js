@@ -3,7 +3,7 @@ import React from 'react';
 import LoadingIndicator from '../UI/LoadingIndicator';
 import './IngredientList.css';
 
-const IngredientList = (props) => {
+const IngredientList = React.memo((props) => {
   return (
     <section className="ingredient-list">
       <h2>Loaded Ingredients</h2>
@@ -21,6 +21,8 @@ const IngredientList = (props) => {
       )}
     </section>
   );
-};
+});
+
+IngredientList.displayName = 'IngredientList';
 
 export default IngredientList;
